@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
 from .forms import UserForm, ProfileForm
 from .models import Profile
 from django.views.decorators.csrf import csrf_exempt  # Import the decorator
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 import json
 
 
@@ -54,15 +56,16 @@ def profile(request):
     }, status=200)
 
 @csrf_exempt
+@require_POST
 def login_view(request):
-    if request.method == "POST":
+    
      try:     
         data = json.loads(request.body) # to convert thwe json body of postman into dictionary
 
         username = data.get('username')
         password = data.get('password')
-        print(username)
-        print(password)
+        # print(username)
+        # print(password)
         if not username or not password:
             return JsonResponse({"error": "User not found "}, status=404)
         user = authenticate(request,username=username,password=password)
@@ -77,3 +80,12 @@ def login_view(request):
 
      except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+@csrf_exempt
+@login_required
+def logout_view(request):
+
+    auth_logout(request)
+    return JsonResponse({'message': 'Logout successful'}, status=200)
+      
+      
